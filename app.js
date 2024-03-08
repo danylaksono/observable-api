@@ -34,6 +34,29 @@ connectToDb()
     const db = client.db("visunit");
     const collection = db.collection("visunit-data");
 
+    // GET route to retrieve all documents
+    app.get("/data", async (req, res) => {
+      try {
+        // Use the req.query object as the query
+        const query = req.query;
+
+        // Use the find method to retrieve all documents that match the query
+        const cursor = collection.find(query);
+        const documents = await cursor.toArray();
+
+        if (documents.length === 0) {
+          res.status(404).json({
+            message: "No documents found with the provided key-value pairs",
+          });
+        } else {
+          res.json(documents);
+        }
+      } catch (error) {
+        console.error("Error retrieving documents:", error);
+        res.status(500).json({ message: "Error fetching documents" });
+      }
+    });
+
     // POST route to insert a document
     app.post("/data", async (req, res) => {
       console.log(req.body);
@@ -50,11 +73,15 @@ connectToDb()
       }
     });
 
-    // GET route to retrieve all documents
-    app.get("/data", async (req, res) => {
+    // GET route to retrieve all documents that match a key-value pair
+    app.get("/data/:key/:value", async (req, res) => {
       try {
-        // Use the req.query object as the query
-        const query = req.query;
+        const key = req.params.key; // Get the key from the URL parameters
+        const value = req.params.value; // Get the value from the URL parameters
+
+        // Create a query object based on the key and value
+        let query = {};
+        query[key] = value;
 
         // Use the find method to retrieve all documents that match the query
         const cursor = collection.find(query);
@@ -62,7 +89,7 @@ connectToDb()
 
         if (documents.length === 0) {
           res.status(404).json({
-            message: "No documents found with the provided key-value pairs",
+            message: "No documents found with the provided key-value pair",
           });
         } else {
           res.json(documents);
@@ -100,30 +127,32 @@ connectToDb()
       }
     });
 
-    // GET route to retrieve all documents that match a key-value pair
-    app.get("/data/:key/:value", async (req, res) => {
+    // PUT route to update many documents
+    app.put("/data/:key/:value/all", async (req, res) => {
       try {
         const key = req.params.key; // Get the key from the URL parameters
         const value = req.params.value; // Get the value from the URL parameters
+        const newData = req.body; // Get the new data from the request body
 
         // Create a query object based on the key and value
         let query = {};
         query[key] = value;
 
-        // Use the find method to retrieve all documents that match the query
-        const cursor = collection.find(query);
-        const documents = await cursor.toArray();
+        // Use the $set operator to update the documents
+        const result = await collection.updateMany(query, { $set: newData });
 
-        if (documents.length === 0) {
+        if (result.modifiedCount === 0) {
           res.status(404).json({
             message: "No documents found with the provided key-value pair",
           });
         } else {
-          res.json(documents);
+          res.json({
+            message: `Updated ${result.modifiedCount} documents successfully`,
+          });
         }
       } catch (error) {
-        console.error("Error retrieving documents:", error);
-        res.status(500).json({ message: "Error fetching documents" });
+        console.error("Error updating documents:", error);
+        res.status(500).json({ message: "Error updating documents" });
       }
     });
 
