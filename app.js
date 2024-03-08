@@ -14,16 +14,13 @@ app.get("/", async (req, res) => {
   res.json({ message: "Please visit /data to view all the stored dataset" });
 });
 
-let client; // Define the client variable in the global scope
+let client;
 
 async function connectToDb() {
   try {
-    client = await MongoClient.connect(uri, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-    });
+    client = await MongoClient.connect(uri);
     console.log("Connected to MongoDB Atlas");
-    return client; // Return the client
+    return client;
   } catch (error) {
     console.error("Error connecting to MongoDB Atlas:", error);
     process.exit(1);
@@ -56,9 +53,74 @@ connectToDb()
     // GET route to retrieve all documents
     app.get("/data", async (req, res) => {
       try {
-        const cursor = collection.find({});
+        // Use the req.query object as the query
+        const query = req.query;
+
+        // Use the find method to retrieve all documents that match the query
+        const cursor = collection.find(query);
         const documents = await cursor.toArray();
-        res.json(documents);
+
+        if (documents.length === 0) {
+          res.status(404).json({
+            message: "No documents found with the provided key-value pairs",
+          });
+        } else {
+          res.json(documents);
+        }
+      } catch (error) {
+        console.error("Error retrieving documents:", error);
+        res.status(500).json({ message: "Error fetching documents" });
+      }
+    });
+
+    // PUT route to update a document
+    app.put("/data/:key/:value", async (req, res) => {
+      try {
+        const key = req.params.key; // Get the key from the URL parameters
+        const value = req.params.value; // Get the value from the URL parameters
+        const newData = req.body; // Get the new data from the request body
+
+        // Create a query object based on the key and value
+        let query = {};
+        query[key] = value;
+
+        // Use the $set operator to update the document
+        const result = await collection.updateOne(query, { $set: newData });
+
+        if (result.modifiedCount === 0) {
+          res.status(404).json({
+            message: "No document found with the provided key-value pair",
+          });
+        } else {
+          res.json({ message: "Document updated successfully" });
+        }
+      } catch (error) {
+        console.error("Error updating document:", error);
+        res.status(500).json({ message: "Error updating document" });
+      }
+    });
+
+    // GET route to retrieve all documents that match a key-value pair
+    app.get("/data/:key/:value", async (req, res) => {
+      try {
+        const key = req.params.key; // Get the key from the URL parameters
+        const value = req.params.value; // Get the value from the URL parameters
+
+        // Create a query object based on the key and value
+        let query = {};
+        query[key] = value;
+
+        // Use the find method to retrieve all documents that match the query
+        const cursor = collection.find(query);
+        const documents = await cursor.toArray();
+
+        if (documents.length === 0) {
+          res.status(404).json({
+            message: "No documents found with the provided key-value pair",
+          });
+        } else {
+          res.json(documents);
+        }
       } catch (error) {
         console.error("Error retrieving documents:", error);
         res.status(500).json({ message: "Error fetching documents" });
