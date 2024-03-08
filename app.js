@@ -1,4 +1,5 @@
 const express = require("express");
+const cors = require("cors");
 const MongoClient = require("mongodb").MongoClient;
 require("dotenv").config();
 
@@ -7,6 +8,11 @@ const port = process.env.PORT || 3300; // Use environment variable or default po
 const uri = process.env.MONGODB_URI || "mongodb://localhost:27017/visunit";
 
 app.use(express.json()); // Enable JSON body parsing
+app.use(cors()); // Enable CORS for all routes
+
+app.get("/", async (req, res) => {
+  res.json({ message: "Please visit /data to view all the stored dataset" });
+});
 
 let client; // Define the client variable in the global scope
 
