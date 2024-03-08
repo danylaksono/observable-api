@@ -1,0 +1,27 @@
+{
+  "dependencies": {
+    "express": "^4.18.3",
+    "mongodb": "^6.4.0"
+  },
+  "name": "observable-api",
+  "description": "API demo for an observable notebook",
+  "version": "1.0.0",
+  "main": "app.js",
+  "devDependencies": {},
+  "scripts": {
+    "test": "test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/danylaksono/observable-api.git"
+  },
+  "keywords": [
+    "visunit"
+  ],
+  "author": "danylaksono",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/danylaksono/observable-api/issues"
+  },
+  "homepage": "https://github.com/danylaksono/observable-api#readme"
+}
